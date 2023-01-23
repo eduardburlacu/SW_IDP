@@ -20,18 +20,22 @@ void accelerate(uint8_t initial_speed=0, uint8_t final_speed=255, uint8_t step_s
   uint8_t current=initial_speed;
   while(current!=final_speed)
   {
-    motorLeft -> setSpeed(current);
+    motorLeft  -> setSpeed(current);
     motorRight -> setSpeed(current); 
     current += step_size;
     delay(10);
   }
 }
 
-
-
 void setup() {
   AFMS.begin();
+  pinMode(pinL, INPUT);
+  pinMode(pinR, INPUT);
+  pinMode(pinLL,INPUT);
+  pinMode(pinRR,INPUT);
 }
+
+
 
 void loop() {
   // put your main code here, to run repeatedly:

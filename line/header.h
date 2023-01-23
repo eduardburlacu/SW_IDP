@@ -19,10 +19,10 @@ extern float Kd, Kp, Ki;           // PID controller parameters. Need to be foun
 
 // Define the pin numbers for sensors and motors. To be filled in with Andrew after they finish the electrical circuits!!
 
-#define pinL
-#define pinR
-#define pinLL
-#define pinRR
+#define pinL  1
+#define pinR  2
+#define pinLL 3
+#define pinRR 4
 #define pinUltrasonicFront
 #define pinUltrasonicSide
 #define pinRedLed
@@ -38,7 +38,8 @@ float control(float v[], float iv[]);
 float get_error(void);
 float moving_avg(int N, int len,float v[]);
 float moving_avg(int len, float v[]);
-float most_linkely(int v[]);
+
+uint8_t measure(int pin);
 
 void accelerate(uint8_t initial_speed, uint8_t final_speed, uint8_t step_size, bool reverse);
 void blinkLed(void);
@@ -90,11 +91,17 @@ float control(void){
   // Used for the feedback loop of the parameter. The new value of the motor speed is set accordingly.
   return Kp * THETA + Ki * TOTAL_THETA + Kd * (THETA - PREV_THETA); 
 } 
-/*
+
 void get_state(void){
-  LINE[0]     = digitalRead(pinL);
-  LINE[1]     = digitalRead(pinR);
-  JUNCTION[0] = digitalRead(pinLL);
-  JUNCTION[0] = digitalRead(pinRR);
-}
-*/
+  int v[4]={0,0,0,0};
+  for (int i=0;i<NUM_READ;i++){
+  LINE[0]     += digitalRead(pinL);
+  LINE[1]     += digitalRead(pinR);
+  JUNCTION[0] += digitalRead(pinLL);
+  JUNCTION[0] += digitalRead(pinRR);
+  delay(3); }
+  for (int j=0;j<2;j++){
+    LINE[j]     = (LINE[j]    + NUM_READ - 1)/NUM_READ;
+    JUNCTION[j] = (JUNCTION[j]+ NUM_READ - 1)/NUM_READ; } }
+
+
