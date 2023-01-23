@@ -17,6 +17,9 @@ extern float THETA = 0.0;			     // Angle of rotation relative to the line to be
 extern float PREV_THETA = 0.0;     // Previous step -> angle of rotation relative to the line to be followed.
 extern float TOTAL_THETA = 0.0;		 // Discrete integral of rotation relative to the line to be followed.
 extern float Kd, Kp, Ki;           // PID controller parameters. Need to be found analitically after the mechanics is done!!
+extern float TAU;                  // The required time to perform a 90 deg turn.
+extern uint8_t DELTA;              // Compensation caused by the imbalance in weight of distribution in the robot. Make it positive if it drifts to the left!!
+// Needs assigned value and tweaked tomorrow!!!!!!
 
 
 // Define the pin numbers for sensors and motors. To be filled in with Andrew after they finish the electrical circuits!!
@@ -38,8 +41,7 @@ extern float Kd, Kp, Ki;           // PID controller parameters. Need to be foun
 
 // Prototypes for functions
 
-float control(float v[], float iv[]);
-float get_error(void);
+float get_control_signal(void);
 float moving_avg(int N, int len,float v[]);
 float moving_avg(int len, float v[]);
 
@@ -47,17 +49,18 @@ uint8_t measure(int pin);
 
 void accelerate(uint8_t initial_speed, uint8_t final_speed, uint8_t step_size, bool reverse);
 void blinkLed(void);
+void get_error(void);
 void get_state(void);
 void junction_search_cube(void);
 void junction_detector(void);
 void lift_cube(void);
 void line_follower(void);
+void tunel_navigation(void);
 void search_cube(void);
 void turnLeft(void);
 void turnLeft(int angle);
 void turnRight(void);
 void turnRight(int angle);
-
 
 // Some general purpose functions
 
@@ -88,11 +91,18 @@ float moving_avg(int len, float v[])
     return average_total;
 }
 
-float get_error(void){
-  if ( (LINE=="01") || (LINE=="10") ){return 1.0;}
-  else {return 0.0;}  }
+void get_error(void)
+{ 
+  /*
+  Convention: shift to left leads to positive error.
+  */
+  PREV_THETA = THETA;
+  if (LINE=="01"){ THETA = 1.0; }
+  else if( LINE=="10" ){THETA = -1.0; }
+  else {THETA = 0.0; }
+}
 
-float control(void){ 
+float get_control_signal(void){ 
   // Used for the feedback loop of the parameter. The new value of the motor speed is set accordingly.
   return Kp * THETA + Ki * TOTAL_THETA + Kd * (THETA - PREV_THETA); }
 

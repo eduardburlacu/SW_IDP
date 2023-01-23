@@ -7,7 +7,7 @@ Adafruit_DCMotor *motorLeft  = AFMS.getMotor(1);
 Adafruit_DCMotor *motorRight = AFMS.getMotor(2);
 Servo servo;
 
-void accelerate(uint8_t initial_speed=0, uint8_t final_speed=255, uint8_t step_size=5, bool reverse=false)
+void accelerate(uint8_t initial_speed=0, uint8_t final_speed=255/2, uint8_t step_size=5, bool reverse=false)
 {
   motorLeft -> setSpeed(initial_speed);
   motorRight-> setSpeed(initial_speed);
@@ -56,7 +56,7 @@ void junction_detector(void)
         motorRight -> setSpeed(0);
         motorLeft  -> run(RELEASE);
         motorRight -> run(RELEASE);
-        if (to_tunnel) { turnLeft(); } else{turnRight(); }    // !!!!!!!!!!!!!!!!!!!!! Check this out tomorrow on map !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        if (to_tunnel) { turnLeft(); } else{turnRight(); }    // !!!!!!!!!!!!!!!!!!!!! Check this out tomorrow on map, it may be the opposite !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         is_junction = false;
         }
     }
@@ -65,6 +65,16 @@ void junction_detector(void)
       Serial.print(JUNCTION[0]);
       Serial.println(JUNCTION[1]);
     }
+}
+
+void line_follower(void){
+  get_state();
+  junction_detector();
+  get_error();
+  float x = get_control_signal();
+  motorLeft -> setSpeed(255/2 + DELTA - x);
+  motorRight -> setSpeed(255/2- DELTA - x);  
+  delay(REFRESH_TIME);
 }
 
 void setup() {
