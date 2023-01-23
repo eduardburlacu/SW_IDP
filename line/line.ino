@@ -1,8 +1,10 @@
 #include "header.h"
+ // Create objects for motor control (DC and Servo)
 
 Adafruit_MotorShield  AFMS   = Adafruit_MotorShield();
 Adafruit_DCMotor *motorLeft  = AFMS.getMotor(1);
 Adafruit_DCMotor *motorRight = AFMS.getMotor(2);
+Servo servo;
 
 void accelerate(uint8_t initial_speed=0, uint8_t final_speed=255, uint8_t step_size=5, bool reverse=false)
 {
@@ -24,6 +26,8 @@ void accelerate(uint8_t initial_speed=0, uint8_t final_speed=255, uint8_t step_s
     delay(10);
   }
 }
+
+
 
 void setup() {
   AFMS.begin();

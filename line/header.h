@@ -2,41 +2,57 @@
 #include "Wire.h"
 #include <Servo.h>
 
+
 // Define the relevant state variables
-extern int REFRESH_TIME=10; 		// Time in miliseconds after which a new update is provided
-extern int NUM_READ = 8;				  // Number of points to use for average
-extern char  LINE[] = "00";				// Variable encoding the state of the 2 IR sensors for line following.
-extern char  JUNCTION[] = "00";	  // Variable encoding the state of the 2 IR sensors for junction detection.
+
+extern int   REFRESH_TIME=10; 		 // Time in miliseconds after which a new update is provided
+extern int   NUM_READ = 8;				 // Number of points to use for average
+extern int   LINE[]     = {0,0};			 // Variable encoding the state of the 2 IR sensors for line following.
+extern int   JUNCTION[] = {0,0};   // Variable encoding the state of the 2 IR sensors for junction detection.
 extern int   speedLeft = 0;        // Variable for the speed of the left  DC Motor, range 0->255
 extern int   speedRight =0;        // Variable for the speed of the right DC Motor, range 0->255
-extern float THETA = 0.0;			    // Angle of rotation relative to the line to be followed.
+extern float THETA = 0.0;			     // Angle of rotation relative to the line to be followed.
 extern float PREV_THETA = 0.0;     // Previous step -> angle of rotation relative to the line to be followed.
-extern float TOTAL_THETA = 0.0;		// Discrete integral of rotation relative to the line to be followed.
+extern float TOTAL_THETA = 0.0;		 // Discrete integral of rotation relative to the line to be followed.
 extern float Kd, Kp, Ki;           // PID controller parameters. Need to be found analitically after the mechanics is done!!
+
 
 // Define the pin numbers for sensors and motors. To be filled in with Andrew after they finish the electrical circuits!!
 
-#define pinSensorL
-#define pinSensorR
-#define pinSensorLL
-#define pinSensorRR
+#define pinL
+#define pinR
+#define pinLL
+#define pinRR
+#define pinUltrasonicFront
+#define pinUltrasonicSide
 #define pinRedLed
 #define pinBlueLed
+#define pinMotorLeft
+#define pinMotorRight
+#define pinPotServo           // Analog pin used to connect the potentiometer
+
 
 // Prototypes for functions
 
-float moving_avg(int N, int len,float v[]);
-float moving_avg(int len, float v[]);
 float control(float v[], float iv[]);
 float get_error(void);
-void search_cube(void);
+float moving_avg(int N, int len,float v[]);
+float moving_avg(int len, float v[]);
+float most_linkely(int v[]);
+
+void accelerate(uint8_t initial_speed, uint8_t final_speed, uint8_t step_size, bool reverse);
+void blinkLed(void);
+void get_state(void);
 void junction_search_cube(void);
 void lift_cube(void);
+void search_cube(void);
 void turnLeft(void);
 void turnLeft(int angle);
 void turnRight(void);
 void turnRight(int angle);
-void blinkLed(void);
+
+
+// Some general purpose functions
 
 float moving_avg(int N, int len, float v[])
 {
@@ -73,5 +89,12 @@ float get_error(void){
 float control(void){ 
   // Used for the feedback loop of the parameter. The new value of the motor speed is set accordingly.
   return Kp * THETA + Ki * TOTAL_THETA + Kd * (THETA - PREV_THETA); 
-  } 
-
+} 
+/*
+void get_state(void){
+  LINE[0]     = digitalRead(pinL);
+  LINE[1]     = digitalRead(pinR);
+  JUNCTION[0] = digitalRead(pinLL);
+  JUNCTION[0] = digitalRead(pinRR);
+}
+*/
