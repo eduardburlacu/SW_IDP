@@ -3,22 +3,24 @@
 #include <Servo.h>
 
 // Define the relevant state variables
+extern bool  is_in_box = true;     // True if the robot is inside the start/end point.
 extern bool  is_junction = false;  // True if the algorithm has found a junction or + intersection.
 extern bool  is_region = false;    // True if the robot has reached the region where cubes are expected.        !!!!!!! ADD STH SO THAT IT GETS TRIGGERED !!!!!!!!!!!
 extern bool  is_tunnel=false;      // When inside the tunnel, becomes on by triggering the photodiode receptor. !!!!!!! ADD STH SO THAT IT GETS TRIGGERED !!!!!!!!!!!
 extern bool  to_tunnel=false;      // When the return path is by the tunnel.                                    !!!!!!! ADD STH SO THAT IT GETS TRIGGERED !!!!!!!!!!!
 extern int   REFRESH_TIME=10; 		 // Time in miliseconds after which a new update is provided
 extern int   NUM_READ = 8;				 // Number of points to use for average
-extern int   LINE[]     = {0,0};	 // Variable encoding the state of the 2 IR sensors for line following.
-extern int   JUNCTION[] = {0,0};   // Variable encoding the state of the 2 IR sensors for junction detection.
-extern int   speedLeft = 0;        // Variable for the speed of the left  DC Motor, range 0->255
-extern int   speedRight =0;        // Variable for the speed of the right DC Motor, range 0->255
+extern int   JUNCTION[] = {0,0};
+extern int   LINE[]     = {0,0};	 // Variable encoding the state of the 2 IR sensors for line following.      
 extern float THETA = 0.0;			     // Angle of rotation relative to the line to be followed.
 extern float PREV_THETA = 0.0;     // Previous step -> angle of rotation relative to the line to be followed.
 extern float TOTAL_THETA = 0.0;		 // Discrete integral of rotation relative to the line to be followed.
 extern float Kd, Kp, Ki;           // PID controller parameters. Need to be found analitically after the mechanics is done!!
 extern float TAU;                  // The required time to perform a 90 deg turn.
 extern uint8_t DELTA;              // Compensation caused by the imbalance in weight of distribution in the robot. Make it positive if it drifts to the left!!
+extern uint8_t TOP_SPEED;          // The final speed of the robot as ratio to the maximum available input from the DC motor.
+extern uint8_t speedLeft;          // Variable for the speed of the left  DC Motor, range 0->255
+extern uint8_t speedRight;         // Variable for the speed of the right DC Motor, range 0->255    
 // Needs assigned value and tweaked tomorrow!!!!!!
 
 
@@ -53,6 +55,7 @@ void get_error(void);
 void get_state(void);
 void junction_search_cube(void);
 void junction_detector(void);
+void leave_box(void);
 void lift_cube(void);
 void line_follower(void);
 void tunel_navigation(void);
