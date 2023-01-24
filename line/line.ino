@@ -6,6 +6,8 @@ Adafruit_MotorShield  AFMS   = Adafruit_MotorShield();
 Adafruit_DCMotor *motorLeft  = AFMS.getMotor(1);
 Adafruit_DCMotor *motorRight = AFMS.getMotor(2);
 Servo servo;
+Servo servoArm;
+Servo servoClaw;
 
 void accelerate(uint8_t initial_speed=0, uint8_t final_speed=255/2, uint8_t step_size=5, bool reverse=false)
 {
@@ -67,6 +69,32 @@ void junction_detector(void)
     }
 }
 
+// to be called when robot is set distance from block
+void cube_retrieval() {
+  //slow down before reaching block
+  if ((distance_front > pickup_distance) && (speedLeft != 127/2)) {
+    motorLeft  -> setSpeed(127/2);
+    motorRight  -> setSpeed(127/2);
+    speedLeft = 127/2;
+    speedRight = 127/2;
+  }
+  //stop robot
+  if (!(distance_front > pickup_distance)) {
+    motorLeft  -> setSpeed(0);
+    motorRight  -> setSpeed(0);
+    motorLeft  -> run(RELEASE);
+    motorRight -> run(RELEASE);
+    speedLeft = 0;
+    speedRight = 0;
+  }
+  //descend claw
+  servoArm.write(arm_down);
+  //close claw 
+  servoClaw.write(claw_close);
+  //lift claw
+  servoArm.write(arm_up);
+}
+
 void line_follower(void){
   get_state();
   junction_detector();
@@ -84,6 +112,8 @@ void setup() {
   pinMode(pinR, INPUT);
   pinMode(pinLL,INPUT);
   pinMode(pinRR,INPUT);
+  servoArm.attach(pinArm);
+  servoClaw.attach(pinClaw);
 }
 
 void loop() {

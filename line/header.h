@@ -21,6 +21,13 @@ extern float TAU;                  // The required time to perform a 90 deg turn
 extern uint8_t DELTA;              // Compensation caused by the imbalance in weight of distribution in the robot. Make it positive if it drifts to the left!!
 // Needs assigned value and tweaked tomorrow!!!!!!
 
+extern uint8_t claw_open = 0;       // Servo motor angle for open claw
+extern uint8_t claw_close = 0;      // Servo motor angle for closed claw
+extern uint8_t arm_up = 0;          // Servo motor angle for elevated arm
+extern uint8_t arm_down = 0;        // Servo motor angle for lowered arm
+extern uint8_t pickup_distance = 0; // Distance from ultrasound where robot stops
+extern uint8_t distance_front = final_distance_reading(); // Get average distance reading (discard anomalies)
+
 
 // Define the pin numbers for sensors and motors. To be filled in with Andrew after they finish the electrical circuits!!
 
@@ -37,6 +44,8 @@ extern uint8_t DELTA;              // Compensation caused by the imbalance in we
 #define pinMotorLeft
 #define pinMotorRight
 #define pinPotServo           // Analog pin used to connect the potentiometer
+#define pinArm
+#define pinClaw
 
 
 // Prototypes for functions
@@ -63,6 +72,20 @@ void turnRight(void);
 void turnRight(int angle);
 
 // Some general purpose functions
+
+float final_distance_reading(int len = 5) {
+  uint8_t counter = 0;
+  unsigned long output[];
+  unsigned long reading;
+  while (counter < len) {
+    reading = readUltrasonicDistance()
+    if (reading < 100 && reading > 0) {
+      output[counter] = reading;
+      counter += 1;
+    }
+  }
+  return moving_avg(len, output);
+}
 
 float moving_avg(int N, int len, float v[])
 {
