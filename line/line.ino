@@ -72,21 +72,21 @@ void junction_detector(void)
 // to be called when robot is set distance from block
 void cube_retrieval() {
   //slow down before reaching block
-  if ((distance_front > pickup_distance) && (speedLeft != 127/2)) {
-    motorLeft  -> setSpeed(127/2);
-    motorRight  -> setSpeed(127/2);
-    speedLeft = 127/2;
-    speedRight = 127/2;
+  while (distance_front > pickup_distance) {
+    if (speedLeft != 127/2)) {
+      motorLeft  -> setSpeed(127/2);
+      motorRight  -> setSpeed(127/2);
+      speedLeft = 127/2;
+      speedRight = 127/2;
+    }
   }
   //stop robot
-  if (!(distance_front > pickup_distance)) {
-    motorLeft  -> setSpeed(0);
-    motorRight  -> setSpeed(0);
-    motorLeft  -> run(RELEASE);
-    motorRight -> run(RELEASE);
-    speedLeft = 0;
-    speedRight = 0;
-  }
+  motorLeft  -> setSpeed(0);
+  motorRight  -> setSpeed(0);
+  motorLeft  -> run(RELEASE);
+  motorRight -> run(RELEASE);
+  speedLeft = 0;
+  speedRight = 0;
   //descend claw
   servoArm.write(arm_down);
   //close claw 
