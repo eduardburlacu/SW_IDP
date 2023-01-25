@@ -75,7 +75,7 @@ void junction_detector(void)
 }
 
 void leave_box(uint8_t step_size=10){
-
+  if (is_in_box == false){ Serial.println("Error in leave_box, the state of the robot is_in_box is not true as expected"); }
   uint8_t current=0;
   motorLeft -> run(FORWARD);
   motorLeft -> run(FORWARD);
