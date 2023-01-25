@@ -73,20 +73,6 @@ void turnRight(int angle);
 
 // Some general purpose functions
 
-float final_distance_reading(int len = 5) {
-  uint8_t counter = 0;
-  unsigned long output[];
-  unsigned long reading;
-  while (counter < len) {
-    reading = readUltrasonicDistance()
-    if (reading < 100 && reading > 0) {
-      output[counter] = reading;
-      counter += 1;
-    }
-  }
-  return moving_avg(len, output);
-}
-
 float moving_avg(int N, int len, float v[])
 {
     /*
@@ -112,6 +98,21 @@ float moving_avg(int len, float v[])
     }
     average_total /= len;
     return average_total;
+}
+
+// Get average distance reading (discard anomalies)
+float final_distance_reading(int len = 5) {
+  uint8_t counter = 0;
+  unsigned long output[];
+  unsigned long reading;
+  while (counter < len) {
+    reading = readUltrasonicDistance()
+    if (reading < 100 && reading > 0) {
+      output[counter] = reading;
+      counter += 1;
+    }
+  }
+  return moving_avg(len, output);
 }
 
 void get_error(void)

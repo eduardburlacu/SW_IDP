@@ -72,7 +72,7 @@ void junction_detector(void)
 // to be called when robot is set distance from block
 void cube_retrieval() {
   //slow down before reaching block
-  while (distance_front > pickup_distance) {
+  while (final_distance_reading() > pickup_distance) {
     if (speedLeft != 127/2)) {
       motorLeft  -> setSpeed(127/2);
       motorRight  -> setSpeed(127/2);
