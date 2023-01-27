@@ -23,6 +23,13 @@ extern uint8_t speedLeft;          // Variable for the speed of the left  DC Mot
 extern uint8_t speedRight;         // Variable for the speed of the right DC Motor, range 0->255    
 // Needs assigned value and tweaked tomorrow!!!!!!
 
+extern uint8_t claw_open = 0;       // Servo motor angle for open claw
+extern uint8_t claw_close = 0;      // Servo motor angle for closed claw
+extern uint8_t arm_up = 0;          // Servo motor angle for elevated arm
+extern uint8_t arm_down = 0;        // Servo motor angle for lowered arm
+extern uint8_t pickup_distance = 0; // Distance from ultrasound where robot stops
+extern uint8_t distance_front = final_distance_reading(); // Get average distance reading (discard anomalies)
+
 
 // Define the pin numbers for sensors and motors. To be filled in with Andrew after they finish the electrical circuits!!
 
@@ -39,6 +46,8 @@ extern uint8_t speedRight;         // Variable for the speed of the right DC Mot
 #define pinMotorLeft
 #define pinMotorRight
 #define pinPotServo           // Analog pin used to connect the potentiometer
+#define pinArm
+#define pinClaw
 
 
 // Prototypes for functions
@@ -92,6 +101,21 @@ float moving_avg(int len, float v[])
     }
     average_total /= len;
     return average_total;
+}
+
+// Get average distance reading (discard anomalies)
+float final_distance_reading(int len = 5) {
+  uint8_t counter = 0;
+  unsigned long output[];
+  unsigned long reading;
+  while (counter < len) {
+    reading = readUltrasonicDistance()
+    if (reading < 100 && reading > 0) {
+      output[counter] = reading;
+      counter += 1;
+    }
+  }
+  return moving_avg(len, output);
 }
 
 void get_error(void)
