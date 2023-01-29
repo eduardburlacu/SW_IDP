@@ -1,19 +1,19 @@
 #include <Adafruit_MotorShield.h>
 #include "Wire.h"
 #include <Servo.h>
+#include <NewPing.h>
 
 // Define the relevant state variables
-<<<<<<< HEAD
-
+extern bool colorRed  = false;
+extern bool colorDetected = false;
 extern bool cubeDetectedFront = false;
 extern bool cubeDetectedSide  = false;
-extern bool is_in_box = true;        // True if the robot is inside the start/end point.
-extern bool is_junction = false;     // True if the algorithm has found a junction or + intersection.
+extern bool in_junction = false;
+extern bool in_tunnel = false;
+extern bool is_in_box = true;        //V True if the robot is inside the start/end point.
 extern bool is_region = false;       // True if the robot has reached the region where cubes are expected.        !!!!!!! ADD STH SO THAT IT GETS TRIGGERED !!!!!!!!!!!
-extern bool is_tunnel=false;         // When inside the tunnel, becomes on by triggering the photodiode receptor. !!!!!!! ADD STH SO THAT IT GETS TRIGGERED !!!!!!!!!!!
-extern bool to_tunnel=false;         // When the return path is by the tunnel.                                    !!!!!!! ADD STH SO THAT IT GETS TRIGGERED !!!!!!!!!!!
 extern bool cube_to_destination=false;
-
+extern bool destination_reached=false;
 extern unsigned int cubeDistance=0;
 extern unsigned int distance_front;  // Get average distance reading (discard anomalies)
 
@@ -23,11 +23,15 @@ extern uint8_t speedLeft=0;          // Variable for the speed of the left  DC M
 extern uint8_t speedRight=0;         // Variable for the speed of the right DC Motor, range 0->255 
 extern uint8_t state=0;
 
+extern float TunnelKd=0.1, TunnelKp=1, TunnelKi=0.2; // Tunnel PID controller parameters. Need to be found analitically after the mechanics is done!!
+extern const uint8_t TunnelDistance = 0; // desired distance from tunnel wall
+extern const uint8_t TunnelExit = 0; // distance reading found at tunnel exit
 extern uint8_t claw_open = 0;       // Servo motor angle for open claw
 extern uint8_t claw_close = 0;      // Servo motor angle for closed claw
 extern uint8_t arm_up = 0;          // Servo motor angle for elevated arm
 extern uint8_t arm_down = 0;        // Servo motor angle for lowered arm
 extern uint8_t pickup_distance = 0; // Distance from ultrasound where robot stops
+extern const uint8_t truck_distance = 0; // Distance from truck where robot stops
 
 extern float THETA = 0.0;			       // Angle of rotation relative to the line to be followed.
 extern float PREV_THETA = 0.0;       // Previous step -> angle of rotation relative to the line to be followed.
@@ -49,83 +53,66 @@ extern float TOTAL_THETA = 0.0;		   // Discrete integral of rotation relative to
 #define Kp 1              // Need to be found analitically 
 #define Ki 0.2            // after the mechanics is done!!
 
-=======
-extern bool  is_in_box = true;     // True if the robot is inside the start/end point.
-extern bool  is_junction = false;  // True if the algorithm has found a junction or + intersection.
-extern bool  is_region = false;    // True if the robot has reached the region where cubes are expected.        !!!!!!! ADD STH SO THAT IT GETS TRIGGERED !!!!!!!!!!!
-extern bool  is_tunnel=false;      // When inside the tunnel, becomes on by triggering the photodiode receptor. !!!!!!! ADD STH SO THAT IT GETS TRIGGERED !!!!!!!!!!!
-extern bool  to_tunnel=false;      // When the return path is by the tunnel.                                    !!!!!!! ADD STH SO THAT IT GETS TRIGGERED !!!!!!!!!!!
-extern int   REFRESH_TIME=10; 		 // Time in miliseconds after which a new update is provided
-extern int   NUM_READ = 8;				 // Number of points to use for average
-extern int   JUNCTION[] = {0,0};
-extern int   LINE[]     = {0,0};	 // Variable encoding the state of the 2 IR sensors for line following.      
-extern float THETA = 0.0;			     // Angle of rotation relative to the line to be followed.
-extern float PREV_THETA = 0.0;     // Previous step -> angle of rotation relative to the line to be followed.
-extern float TOTAL_THETA = 0.0;		 // Discrete integral of rotation relative to the line to be followed.
-extern float Kd, Kp, Ki;           // PID controller parameters. Need to be found analitically after the mechanics is done!!
-extern float TAU;                  // The required time to perform a 90 deg turn.
-extern uint8_t DELTA;              // Compensation caused by the imbalance in weight of distribution in the robot. Make it positive if it drifts to the left!!
-extern uint8_t TOP_SPEED;          // The final speed of the robot as ratio to the maximum available input from the DC motor.
-extern uint8_t speedLeft;          // Variable for the speed of the left  DC Motor, range 0->255
-extern uint8_t speedRight;         // Variable for the speed of the right DC Motor, range 0->255    
-// Needs assigned value and tweaked tomorrow!!!!!!
-
->>>>>>> parent of 32c0072 (corrected bugs)
 
 // Define the pin numbers for sensors and motors. To be filled in with Andrew after they finish the electrical circuits!!
+
 
 #define pinL  1
 #define pinR  2
 #define pinLL 3
 #define pinRR 4
-#define pinUltrasonicFront
-#define pinUltrasonicSide
-#define pinRedPD
-#define pinBluePD
-#define pinRedLed
-#define pinBlueLed
+#define pinColorRed 20
+#define pinColorTrig 21
+#define pinMoving 10
 #define pinMotorLeft
 #define pinMotorRight
-<<<<<<< HEAD
-#define pinPotServo     // Analog  pin used to connect the potentiometer
+#define pinPotServo      // Analog  pin used to connect the potentiometer
 #define pinFrontTrig 6   // Digital pin used to connect the receiver    of the HC-SR04 ultrasonic front sensor
 #define pinFrontEcho 7   // Digital pin used to connect the transmitter of the HC-SR04 ultrasonic front sensor
 #define pinSideTrig  8   // Digital pin used to connect the receiver    of the HC-SR04 ultrasonic side  sensor
 #define pinSideEcho  9   // Digital pin used to connect the transmitter of the HC-SR04 ultrasonic side  sensor   
 #define pinArm  5
 #define pinClaw 6
-=======
-#define pinPotServo           // Analog pin used to connect the potentiometer
->>>>>>> parent of 32c0072 (corrected bugs)
 
 // Prototypes for functions
 float get_control_signal(void);
+float get_control_signal_tunnel(int diff, int totalDiff, int prevDiff);
 float moving_avg(int N, int len,float v[]);
 float moving_avg(int len, float v[]);
 
 uint8_t measure(int pin);
-<<<<<<< HEAD
 unsigned int final_distance_reading(void);
-=======
->>>>>>> parent of 32c0072 (corrected bugs)
 
 void accelerate(uint8_t initial_speed, uint8_t final_speed, uint8_t step_size, bool reverse);
 void blinkLed(void);
+void cube_retrieval(void);
 void get_error(void);
 void get_state(void);
 void junction_search_cube(void);
 void junction_detector(void);
 void leave_box(void);
 void lift_cube(void);
-void line_follower(bool is_region);
+void line_follower(void);
+void block_retrieval(void);
+void block_placement();
 void tunel_navigation(void);
 void search_cube(void);
 void turnLeft(void);
-void turnLeft(int angle);
+void turnLeft(uint8_t angle);
 void turnRight(void);
-void turnRight(int angle);
-
+void turnRight(uint8_t angle);
+void ultrasonic_lookup(void);
+void update_region(void);
 // Some general purpose functions
+
+void update_region(void)
+{
+   if (state == 3 || state == 4 || state == 5) {
+    is_region = true;
+  } else {
+    is_region = false;
+}
+}
 
 float moving_avg(int N, int len, float v[])
 {
@@ -154,27 +141,6 @@ float moving_avg(int len, float v[])
     return average_total;
 }
 
-<<<<<<< HEAD
-// Get average distance reading (discard anomalies)
-/*
-float final_distance_reading() {
-  int len = 5;
-  uint8_t counter = 0;
-  unsigned long output[];
-  unsigned long reading;
-  while (counter < len) {
-    reading = readUltrasonicDistance()
-    if (reading < 100 && reading > 0) {
-      output[counter] = reading;
-      counter += 1;
-    }
-  }
-  return moving_avg(len, output);
-}
-*/
-
-=======
->>>>>>> parent of 32c0072 (corrected bugs)
 void get_error(void)
 { 
   /*
@@ -184,26 +150,37 @@ void get_error(void)
   if (LINE=="01"){ THETA = 1.0; }
   else if( LINE=="10" ){THETA = -1.0; }
   else {THETA = 0.0; }
+  TOTAL_THETA += THETA;
 }
 
-float get_control_signal(void){ 
+float get_control_signal(void)
+{ 
   // Used for the feedback loop of the parameter. The new value of the motor speed is set accordingly.
-  return Kp * THETA + Ki * TOTAL_THETA + Kd * (THETA - PREV_THETA); }
+  return Kp * THETA + Ki * TOTAL_THETA + Kd * (THETA - PREV_THETA);
+}
+
+float get_control_signal_tunnel(int diff, int totalDiff, int prevDiff)
+{ 
+  // Used for the feedback loop of the parameter. The new value of the motor speed is set accordingly.
+  return TunnelKp * diff + TunnelKi * totalDiff + TunnelKd * (diff - prevDiff);
+}
 
 void get_state(void)
 {
-  int v[4]={0,0,0,0};
+  uint8_t v[4]={0,0,0,0};
   for (int i=0;i<NUM_READ;i++)
   {
   LINE[0]     += digitalRead(pinL);
   LINE[1]     += digitalRead(pinR);
   JUNCTION[0] += digitalRead(pinLL);
   JUNCTION[0] += digitalRead(pinRR);
-  delay(5); 
+  bool is_region;
+  delay(2);
   }
+
   for (int j=0;j<2;j++)
   {  
     LINE[j]     = (LINE[j]    + NUM_READ - 1)/NUM_READ;
     JUNCTION[j] = (JUNCTION[j]+ NUM_READ - 1)/NUM_READ;
-    } 
+  } 
 }
